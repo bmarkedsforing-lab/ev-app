@@ -1,4 +1,4 @@
-var CACHE = 'ev-app-v15';
+var CACHE = 'ev-app-v16';
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
