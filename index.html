@@ -335,6 +335,7 @@ function cl(f,mn,mx){
 
 function updateRange(){
   var soc=fv('sl-soc'),cap=fv('sl-cap'),cons=fv('sl-cons'),t=T[lang];
+  try{localStorage.setItem('ev_soc',soc);localStorage.setItem('ev_cap',cap);localStorage.setItem('ev_cons',cons);}catch(e){}
   if(!cons)return;
   var energy=(soc/100)*cap,range=Math.round((energy/cons)*100),maxR=Math.round((cap/cons)*100);
   g('r-km').textContent=range;g('r-kwh').textContent=energy.toFixed(1).replace('.',',');
@@ -486,6 +487,12 @@ loadFromDB();
 try{var st=localStorage.getItem('ev_theme');if(st&&st!=='auto'){theme=st;document.documentElement.setAttribute('data-theme',st);g('theme-btn').textContent=st==='dark'?'☀️':'🌙';}}catch(e){}
 if(lang==='en'){g('btn-no').className='lang-btn';g('btn-en').className='lang-btn active';}
 if(cars.length>0)loadCar(activeCar);
+try{
+  var ss=localStorage.getItem('ev_soc'),sc=localStorage.getItem('ev_cap'),sn=localStorage.getItem('ev_cons');
+  if(ss){g('sl-soc').value=ss;g('nb-soc').value=ss;}
+  if(sc){g('sl-cap').value=sc;g('nb-cap').value=sc;}
+  if(sn){g('sl-cons').value=sn;g('nb-cons').value=sn;}
+}catch(e){}
 setLang(lang);
 renderCars();updateRange();updateCmp();
 
@@ -505,7 +512,7 @@ renderCars();updateRange();updateCmp();
 
 // Registrer service worker for offline-støtte
 if('serviceWorker' in navigator){
-  var APP_VER='v14';
+  var APP_VER='v15';
   navigator.serviceWorker.getRegistrations().then(function(regs){
     if(localStorage.getItem('app_ver')!==APP_VER){
       localStorage.setItem('app_ver',APP_VER);
