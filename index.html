@@ -465,9 +465,9 @@ function showSyncBadge(msg){
   setTimeout(function(){b.className='saved-badge';},2500);
 }
 
-function cSyncS(){g('cnb').value=fv('csl');updateCmp();}
-function cSyncN(){g('csl').value=fv('cnb');updateCmp();}
-function cClamp(){var v=Math.min(Math.max(fv('cnb'),10),100);g('cnb').value=v;g('csl').value=v;updateCmp();}
+function cSyncS(){g('cnb').value=fv('csl');updateCmp();try{localStorage.setItem('ev_cmp_soc',fv('csl'));}catch(e){}}
+function cSyncN(){g('csl').value=fv('cnb');updateCmp();try{localStorage.setItem('ev_cmp_soc',fv('cnb'));}catch(e){}}
+function cClamp(){var v=Math.min(Math.max(fv('cnb'),10),100);g('cnb').value=v;g('csl').value=v;updateCmp();try{localStorage.setItem('ev_cmp_soc',v);}catch(e){}}
 
 function updateCmp(){
   var soc=fv('csl'),t=T[lang],list=g('cmp-list');list.innerHTML='';
@@ -492,6 +492,8 @@ try{
   if(_soc){g('sl-soc').value=_soc;g('nb-soc').value=_soc;}
   if(_cap){g('sl-cap').value=_cap;g('nb-cap').value=_cap;}
   if(_cons){g('sl-cons').value=_cons;g('nb-cons').value=_cons;}
+  var _csoc=localStorage.getItem('ev_cmp_soc');
+  if(_csoc){g('csl').value=_csoc;g('cnb').value=_csoc;}
 }catch(e){}
 setLang(lang);
 renderCars();updateRange();updateCmp();
@@ -512,7 +514,7 @@ renderCars();updateRange();updateCmp();
 
 // Registrer service worker for offline-støtte
 if('serviceWorker' in navigator){
-  var APP_VER='v16';
+  var APP_VER='v17';
   navigator.serviceWorker.getRegistrations().then(function(regs){
     if(localStorage.getItem('app_ver')!==APP_VER){
       localStorage.setItem('app_ver',APP_VER);
