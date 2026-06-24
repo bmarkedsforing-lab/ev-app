@@ -1,0 +1,25 @@
+{
+  "name": "EV Rekkevidde",
+  "short_name": "EV Range",
+  "description": "Beregn og sammenlign rekkevidde på elbiler",
+  "start_url": "/ev-app/index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f3",
+  "theme_color": "#1D9E75",
+  "orientation": "portrait",
+  "lang": "no",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

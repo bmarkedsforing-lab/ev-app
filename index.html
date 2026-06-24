@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EV Range">
+<meta name="theme-color" content="#1D9E75">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" id="ati" href="">
+<title>EV Rekkevidde App</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#1D9E75;--green-bg:#E1F5EE;--bg:#f5f5f3;--card:#fff;--text:#1a1a18;--muted:#6b6b67;--border:rgba(0,0,0,0.08);--r:16px;--rs:10px;--red:#E24B4A;}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1a1a18;--card:#242422;--text:#f0efe8;--muted:#9a9a94;--border:rgba(255,255,255,0.09);--green-bg:#04342C;}}
+:root[data-theme=dark]{--bg:#1a1a18;--card:#242422;--text:#f0efe8;--muted:#9a9a94;--border:rgba(255,255,255,0.09);--green-bg:#04342C;}
+:root[data-theme=light]{--bg:#f5f5f3;--card:#fff;--text:#1a1a18;--muted:#6b6b67;--border:rgba(0,0,0,0.08);--green-bg:#E1F5EE;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Roboto',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+.app{display:flex;flex-direction:column;height:100vh;}
+.topbar{background:var(--card);border-bottom:0.5px solid var(--border);padding:10px 16px 8px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left h1{font-size:17px;font-weight:600;}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.lang-toggle{display:flex;gap:4px;}
+.lang-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;}
+.lang-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.theme-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;padding:12px;display:none;flex-direction:column;gap:10px;}
+.page.active{display:flex;}
+.bottomnav{height:54px;background:var(--card);border-top:0.5px solid var(--border);display:flex;flex-shrink:0;}
+.navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;color:var(--muted);font-size:10px;}
+.navbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.navbtn.active{color:var(--green);}
+.card{background:var(--card);border-radius:var(--r);border:0.5px solid var(--border);padding:14px;}
+.slbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:14px;}
+.result-big{background:var(--green-bg);border:2px solid var(--green);border-radius:var(--r);padding:18px;text-align:center;}
+.rnum{font-size:64px;font-weight:700;color:var(--green);line-height:1;letter-spacing:-2px;}
+.runit{font-size:12px;color:var(--green);opacity:0.85;margin-top:4px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.metric{background:var(--bg);border-radius:var(--rs);padding:12px;text-align:center;}
+.metric .mnum{font-size:20px;font-weight:600;color:var(--text);}
+.metric .mlbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.sfield{margin-bottom:20px;}
+.sfield:last-child{margin-bottom:0;}
+.sfield label{font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:10px;}
+.sfield-row{display:grid;grid-template-columns:1fr 56px;align-items:center;gap:10px;}
+.sfield-row input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--border);outline:none;}
+.sfield-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.sfield-row input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--green);cursor:pointer;border:none;}
+.numbox{width:100%;height:38px;font-size:13px;font-weight:600;text-align:center;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg);color:var(--text);-moz-appearance:textfield;}
+.numbox::-webkit-outer-spin-button,.numbox::-webkit-inner-spin-button{-webkit-appearance:none;}
+.numbox:focus{outline:none;border-color:var(--green);}
+.buf-info{font-size:11px;color:var(--muted);margin-top:6px;padding:8px;background:var(--bg);border-radius:var(--rs);}
+.buf-info span{color:var(--green);font-weight:600;}
+.visrow{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px;}
+.visbar{width:100%;height:14px;background:var(--bg);border-radius:7px;overflow:hidden;margin-bottom:10px;}
+.visfill{height:100%;border-radius:7px;background:var(--green);transition:width 0.3s;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;padding:5px 5px;border-bottom:0.5px solid var(--border);text-align:right;}
+th:first-child{text-align:left;}
+td{padding:9px 5px;border-bottom:0.5px solid var(--border);color:var(--text);text-align:right;}
+td:first-child{text-align:left;}
+tr:last-child td{border-bottom:none;}
+tr.hi td{color:var(--green);font-weight:600;}
+tr.hi{background:var(--green-bg);}
+.carcard{background:var(--card);border-radius:var(--r);border:0.5px solid var(--border);padding:14px;margin-bottom:8px;}
+.carcard:last-child{margin-bottom:0;}
+.carcard.sel{border:2px solid var(--green);}
+.carcard-top{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.caricon{width:40px;height:40px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.caricon svg{width:20px;height:20px;stroke:var(--green);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.carname{font-size:14px;font-weight:600;color:var(--text);}
+.carspec{font-size:11px;color:var(--muted);margin-top:2px;}
+.carrange{font-size:20px;font-weight:700;color:var(--green);margin-left:auto;text-align:right;flex-shrink:0;}
+.carrange span{display:block;font-size:10px;font-weight:400;color:var(--muted);}
+.carcard-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border);}
+.car-btn{flex:1;height:36px;border-radius:var(--rs);border:0.5px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.car-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.car-btn.load{color:var(--green);border-color:var(--green);}
+.car-btn.del{color:var(--red);border-color:var(--red);}
+.addbtn{background:var(--green-bg);border:2px dashed var(--green);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;color:var(--green);font-size:14px;font-weight:500;}
+.form-field{margin-bottom:12px;}
+.form-field label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;}
+.form-field input{width:100%;height:42px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:14px;background:var(--bg);color:var(--text);}
+.form-field input:focus{outline:none;border-color:var(--green);}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btnrow{display:flex;gap:8px;margin-top:4px;}
+.btn{flex:1;height:44px;border-radius:var(--rs);border:none;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-p{background:var(--green);color:#fff;}
+.btn-s{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.cmp-card{background:var(--card);border-radius:var(--r);border:0.5px solid var(--border);padding:12px;margin-bottom:8px;}
+.cmp-card:last-child{margin-bottom:0;}
+.cmp-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cmp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.cmp-name{font-size:13px;font-weight:600;color:var(--text);}
+.cmp-num{font-size:28px;font-weight:700;margin-bottom:4px;}
+.cmp-barwrap{height:10px;background:var(--bg);border-radius:5px;overflow:hidden;margin-bottom:4px;}
+.cmp-bar{height:100%;border-radius:5px;}
+.cmp-detail{font-size:11px;color:var(--muted);}
+.empty{text-align:center;padding:30px 20px;color:var(--muted);}
+.empty svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 8px;opacity:0.35;}
+.saved-badge{font-size:10px;color:var(--green);text-align:center;margin-top:6px;opacity:0;transition:opacity 0.3s;}
+.saved-badge.show{opacity:1;}
+.sync-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-top:8px;}
+.sync-box p{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.sync-code{width:100%;font-size:11px;font-family:monospace;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);word-break:break-all;min-height:48px;resize:none;}
+.sync-btnrow{display:flex;gap:6px;margin-top:8px;}
+.sync-btn{flex:1;height:36px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;}
+.sync-btn.ok{background:var(--green);color:#fff;border-color:var(--green);}
+.sync-section{margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="pg-title">Rekkevidde</h1>
+      <p id="pg-sub">· 80 % ladet</p>
+    </div>
+    <div class="topbar-right">
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Bytt mørk/lys modus">🌙</button>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-no" onclick="setLang('no')">&#127475;&#127476; NO</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">&#127468;&#127463; EN</button>
+      </div>
+    </div>
+  </div>
+  <div class="pages">
+
+    <div class="page active" id="page-range">
+      <div class="result-big">
+        <div class="rnum" id="r-km">—</div>
+        <div class="runit" id="t-km-unit">km estimert rekkevidde</div>
+      </div>
+      <div class="g2">
+        <div class="metric"><div class="mnum" id="r-kwh">—</div><div class="mlbl" id="t-kwh-lbl">kWh tilgjengelig</div></div>
+        <div class="metric"><div class="mnum" id="r-soc-disp">80 %</div><div class="mlbl" id="t-soc-lbl">Ladenivå</div></div>
+      </div>
+      <div class="card">
+        <p class="slbl" id="t-adjust">Juster innstillinger</p>
+        <div class="sfield">
+          <label id="t-soc">Ladenivå</label>
+          <div class="sfield-row">
+            <input type="range" min="10" max="100" step="1" value="80" id="sl-soc" oninput="ss('soc')">
+            <input class="numbox" type="number" min="10" max="100" step="1" value="80" id="nb-soc" oninput="sn('soc')" onblur="cl('soc',10,100)">
+          </div>
+        </div>
+        <div class="sfield">
+          <label id="t-cap">Brukbar kapasitet (kWh)</label>
+          <div class="sfield-row">
+            <input type="range" min="50" max="120" step="0.5" value="86" id="sl-cap" oninput="ss('cap')">
+            <input class="numbox" type="number" min="50" max="120" step="0.5" value="86" id="nb-cap" oninput="sn('cap')" onblur="cl('cap',50,120)">
+          </div>
+          <div class="buf-info" id="buf-info" style="display:none;">Brutto: <span id="buf-gross">—</span> · Buffer: <span id="buf-diff">—</span></div>
+        </div>
+        <div class="sfield">
+          <label id="t-cons">Forbruk (kWh/100 km)</label>
+          <div class="sfield-row">
+            <input type="range" min="14" max="40" step="0.1" value="24.5" id="sl-cons" oninput="ss('cons')">
+            <input class="numbox" type="number" min="14" max="40" step="0.1" value="24.5" id="nb-cons" oninput="sn('cons')" onblur="cl('cons',14,40)">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="slbl" id="t-vis">Visualisering</p>
+        <div class="visrow"><span>0 %</span><span id="r-soc-lbl">80 % ladet</span><span>100 %</span></div>
+        <div class="visbar"><div class="visfill" id="r-soc-bar" style="width:80%"></div></div>
+        <div class="visrow"><span>0 km</span><span id="r-km-lbl">— km</span><span id="r-max-lbl">600 km</span></div>
+        <div class="visbar"><div class="visfill" id="r-km-bar"></div></div>
+        <table style="margin-top:8px;">
+          <thead><tr><th id="t-th-lvl">Nivå</th><th id="t-th-nrg">Energi</th><th id="t-th-rng">Rekkevidde</th></tr></thead>
+          <tbody id="r-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-cars">
+      <div class="card">
+        <p class="slbl" id="t-mycars">Mine biler</p>
+        <div id="car-list"></div>
+      </div>
+      <div class="addbtn" onclick="showForm(-1)"><span id="t-addcar">+ Legg til bil</span></div>
+      <div class="card sync-section">
+        <p class="slbl">Synk biler</p>
+        <div class="sync-box">
+          <p id="t-sync-exp">Kopier denne koden og lim den inn på en annen enhet for å overføre bilene dine:</p>
+          <textarea class="sync-code" id="sync-out" readonly rows="3"></textarea>
+          <div class="sync-btnrow">
+            <button class="sync-btn ok" onclick="copySyncCode()">📋 Kopier kode</button>
+          </div>
+        </div>
+        <div class="sync-box" style="margin-top:8px;">
+          <p id="t-sync-imp">Lim inn synk-kode fra en annen enhet:</p>
+          <textarea class="sync-code" id="sync-in" rows="3" placeholder="Lim inn kode her..."></textarea>
+          <div class="sync-btnrow">
+            <button class="sync-btn ok" onclick="importSyncCode()">📲 Importer biler</button>
+          </div>
+          <div class="saved-badge" id="sync-badge"></div>
+        </div>
+      </div>
+      <div class="card" id="add-form" style="display:none;">
+        <p class="slbl" id="t-newcar">Ny bil</p>
+        <div class="form-field"><label id="t-f-name">Bilnavn</label><input type="text" id="f-name" placeholder="f.eks. Audi e-tron 55"></div>
+        <div class="form-row2">
+          <div class="form-field" style="margin-bottom:0;"><label id="t-f-gross">Brutto batteri (kWh)</label><input type="number" id="f-gross" placeholder="95" step="0.5" oninput="formCalcBuf()"></div>
+          <div class="form-field" style="margin-bottom:0;"><label id="t-f-cap">Brukbar (kWh)</label><input type="number" id="f-cap" placeholder="86" step="0.5" oninput="formCalcBuf()"></div>
+        </div>
+        <div class="buf-info" style="margin-top:8px;margin-bottom:12px;">Buffer: <span id="form-buf">—</span></div>
+        <div class="form-field"><label id="t-f-cons">Typisk forbruk (kWh/100 km)</label><input type="number" id="f-cons" placeholder="f.eks. 24.5" step="0.1"></div>
+        <div class="btnrow">
+          <button class="btn btn-s" id="t-cancel" onclick="hideForm()">Avbryt</button>
+          <button class="btn btn-p" id="t-save" onclick="saveCar()">Lagre</button>
+        </div>
+        <div class="saved-badge" id="saved-badge">✓ Lagret</div>
+      </div>
+    </div>
+
+    <div class="page" id="page-cmp">
+      <div class="card">
+        <p class="slbl" id="t-cmplvl">Ladenivå for sammenligning</p>
+        <div class="sfield" style="margin-bottom:0;">
+          <label id="t-cmpsoc">Ladenivå</label>
+          <div class="sfield-row">
+            <input type="range" min="10" max="100" step="1" value="80" id="csl" oninput="cSyncS()">
+            <input class="numbox" type="number" min="10" max="100" step="1" value="80" id="cnb" oninput="cSyncN()" onblur="cClamp()">
+          </div>
+        </div>
+      </div>
+      <div id="cmp-list"></div>
+    </div>
+
+  </div>
+  <nav class="bottomnav">
+    <button class="navbtn active" id="nav-range" onclick="goTo('range')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="t-nav-range">Rekkevidde</span>
+    </button>
+    <button class="navbtn" id="nav-cars" onclick="goTo('cars')">
+      <svg viewBox="0 0 24 24"><path d="M5 17H3v-5l2-6h14l2 6v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 17h12"/></svg>
+      <span id="t-nav-cars">Biler</span>
+    </button>
+    <button class="navbtn" id="nav-cmp" onclick="goTo('cmp')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
+      <span id="t-nav-cmp">Sammenlign</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+var COLORS=['#1D9E75','#378ADD','#D85A30','#D4537E','#7F77DD','#BA7517'];
+
+var DEFAULT_CARS=[
+  {name:'Audi e-tron 55',gross:95,cap:86,cons:24.5}
+];
+var cars=[];
+var activeCar=0,lang='no',currentPage='range',editIdx=-1;
+
+var theme='auto';
+
+function toggleTheme(){
+  var t=document.documentElement;
+  if(theme==='auto'){
+    var isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    theme=isDark?'light':'dark';
+  } else if(theme==='dark'){theme='light';}
+  else{theme='dark';}
+  t.setAttribute('data-theme',theme==='auto'?'':theme);
+  if(theme==='auto')t.removeAttribute('data-theme');
+  g('theme-btn').textContent=theme==='dark'?'☀️':'🌙';
+  try{localStorage.setItem('ev_theme',theme);}catch(e){}
+}
+
+function saveToDB(){
+  try{localStorage.setItem('ev_cars',JSON.stringify(cars));localStorage.setItem('ev_active',activeCar);localStorage.setItem('ev_lang',lang);}catch(e){}
+}
+
+function loadFromDB(){
+  try{
+    var c=localStorage.getItem('ev_cars');
+    var a=localStorage.getItem('ev_active');
+    var l=localStorage.getItem('ev_lang');
+    if(c){cars=JSON.parse(c);}else{cars=DEFAULT_CARS.slice();}
+    if(a!==null)activeCar=parseInt(a)||0;
+    if(activeCar>=cars.length)activeCar=0;
+    if(l)lang=l;
+  }catch(e){cars=DEFAULT_CARS.slice();}
+}
+
+var T={
+  no:{range:'Rekkevidde',myCars:'Mine biler',compare:'Sammenlign',kmUnit:'km estimert rekkevidde',kwhAvail:'kWh tilgjengelig',chargeLevel:'Ladenivå',adjust:'Juster innstillinger',socLabel:'Ladenivå',capLabel:'Brukbar kapasitet (kWh)',consLabel:'Forbruk (kWh/100 km)',vis:'Visualisering',thLvl:'Nivå',thNrg:'Energi',thRng:'Rekkevidde',charged:'% ladet',atLevel:'km v/80%',addCar:'+ Legg til bil',newCar:'Ny bil',editCar:'Rediger bil',carName:'Bilnavn',grossField:'Brutto batteri (kWh)',capField:'Brukbar (kWh)',consField:'Typisk forbruk (kWh/100 km)',cancel:'Avbryt',save:'Lagre',saved:'✓ Lagret',noCars:'Ingen biler lagt til',cmpLevel:'Ladenivå for sammenligning',cmpSoc:'Ladenivå',noCmp:'Legg til biler for å sammenligne',loadBtn:'Velg',editBtn:'Rediger',delBtn:'Slett',delConfirm:'Slette denne bilen?'},
+  en:{range:'Range',myCars:'My cars',compare:'Compare',kmUnit:'km estimated range',kwhAvail:'kWh available',chargeLevel:'SOC (State Of Charge)',adjust:'Adjust settings',socLabel:'SOC (State Of Charge)',capLabel:'Usable capacity (kWh)',consLabel:'Consumption (kWh/100 km)',vis:'Visualization',thLvl:'Level',thNrg:'Energy',thRng:'Range',charged:'% charged',atLevel:'km at 80%',addCar:'+ Add car',newCar:'New car',editCar:'Edit car',carName:'Car name',grossField:'Gross battery (kWh)',capField:'Usable (kWh)',consField:'Typical consumption (kWh/100 km)',cancel:'Cancel',save:'Save',saved:'✓ Saved',noCars:'No cars added yet',cmpLevel:'Charge level for comparison',cmpSoc:'Charge level',noCmp:'Add cars to compare',loadBtn:'Select',editBtn:'Edit',delBtn:'Delete',delConfirm:'Delete this car?'}
+};
+
+function g(id){return document.getElementById(id);}
+function fv(id){return parseFloat(g(id).value)||0;}
+
+function setLang(l){
+  lang=l;saveToDB();
+  g('btn-no').className='lang-btn'+(l==='no'?' active':'');
+  g('btn-en').className='lang-btn'+(l==='en'?' active':'');
+  var t=T[l];
+  g('t-km-unit').textContent=t.kmUnit;g('t-kwh-lbl').textContent=t.kwhAvail;g('t-soc-lbl').textContent=t.chargeLevel;
+  g('t-adjust').textContent=t.adjust;g('t-soc').textContent=t.socLabel;g('t-cap').textContent=t.capLabel;
+  g('t-cons').textContent=t.consLabel;g('t-vis').textContent=t.vis;
+  g('t-th-lvl').textContent=t.thLvl;g('t-th-nrg').textContent=t.thNrg;g('t-th-rng').textContent=t.thRng;
+  g('t-mycars').textContent=t.myCars;g('t-addcar').textContent=t.addCar;
+  g('t-f-name').textContent=t.carName;g('t-f-gross').textContent=t.grossField;
+  g('t-f-cap').textContent=t.capField;g('t-f-cons').textContent=t.consField;
+  g('t-cancel').textContent=t.cancel;g('t-save').textContent=t.save;
+  g('t-cmplvl').textContent=t.cmpLevel;g('t-cmpsoc').textContent=t.cmpSoc;
+  g('t-nav-range').textContent=t.range;g('t-nav-cars').textContent=t.myCars;g('t-nav-cmp').textContent=t.compare;
+  var titles={range:'range',cars:'myCars',cmp:'compare'};
+  g('pg-title').textContent=t[titles[currentPage]];
+  updateRange();renderCars();updateCmp();
+}
+
+function goTo(p){
+  ['range','cars','cmp'].forEach(function(n){g('page-'+n).classList.remove('active');g('nav-'+n).classList.remove('active');});
+  g('page-'+p).classList.add('active');g('nav-'+p).classList.add('active');currentPage=p;
+  var titles={range:'range',cars:'myCars',cmp:'compare'};
+  g('pg-title').textContent=T[lang][titles[p]];
+  if(p==='range')updateRange();if(p==='cmp')updateCmp();if(p==='cars')renderCars();
+}
+
+function ss(f){g('nb-'+f).value=fv('sl-'+f);updateRange();}
+function sn(f){g('sl-'+f).value=fv('nb-'+f);updateRange();}
+function cl(f,mn,mx){
+  var mn2=parseFloat(g('sl-'+f).min)||mn;
+  var mx2=parseFloat(g('sl-'+f).max)||mx;
+  var v=Math.min(Math.max(fv('nb-'+f),mn2),mx2);
+  g('nb-'+f).value=v;g('sl-'+f).value=v;updateRange();
+}
+
+function updateRange(){
+  var soc=fv('sl-soc'),cap=fv('sl-cap'),cons=fv('sl-cons'),t=T[lang];
+  if(!cons)return;
+  var energy=(soc/100)*cap,range=Math.round((energy/cons)*100),maxR=Math.round((cap/cons)*100);
+  g('r-km').textContent=range;g('r-kwh').textContent=energy.toFixed(1).replace('.',',');
+  g('r-soc-disp').textContent=soc+' %';g('r-soc-bar').style.width=soc+'%';g('r-soc-lbl').textContent=soc+t.charged;
+  g('r-km-bar').style.width=Math.min((range/maxR)*100,100).toFixed(1)+'%';
+  g('r-km-lbl').textContent=range+' km';g('r-max-lbl').textContent=maxR+' km';
+  var car=cars[activeCar];
+  if(car&&car.gross){
+    var buf=Math.max(0,car.gross-cap).toFixed(1);
+    g('buf-gross').textContent=car.gross+' kWh';g('buf-diff').textContent=buf+' kWh';
+    g('buf-info').style.display='block';
+  } else {g('buf-info').style.display='none';}
+  g('pg-sub').textContent=(car?car.name:'')+' · '+soc+t.charged;
+  var tb=g('r-tbl');tb.innerHTML='';
+  [60,70,80,90,100].forEach(function(lvl){
+    var e=(lvl/100)*cap,r=Math.round((e/cons)*100),tr=document.createElement('tr');
+    if(lvl===soc)tr.className='hi';
+    tr.innerHTML='<td>'+lvl+' %'+(lvl===soc?' ←':'')+'</td><td>'+e.toFixed(1).replace('.',',')+'&nbsp;kWh</td><td>'+r+'&nbsp;km</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function loadCar(i){
+  activeCar=i;var c=cars[i];
+  var gross=c.gross||c.cap;
+  var capMax=gross;
+  var capMin=Math.round(gross*0.7*2)/2;
+  g('sl-cap').min=capMin;g('sl-cap').max=capMax;
+  g('nb-cap').min=capMin;g('nb-cap').max=capMax;
+  g('sl-cap').value=c.cap;g('nb-cap').value=c.cap;
+  g('sl-cons').value=c.cons;g('nb-cons').value=c.cons;
+  saveToDB();updateRange();
+}
+
+function deleteCar(i){
+  cars.splice(i,1);
+  if(activeCar>=cars.length)activeCar=Math.max(0,cars.length-1);
+  if(cars.length>0)loadCar(activeCar);
+  saveToDB();renderCars();updateCmp();
+}
+
+function formCalcBuf(){
+  var gross=parseFloat(g('f-gross').value)||0,cap=parseFloat(g('f-cap').value)||0;
+  g('form-buf').textContent=(gross&&cap)?Math.max(0,gross-cap).toFixed(1)+' kWh':'—';
+}
+
+function showForm(idx){
+  editIdx=idx;
+  g('t-newcar').textContent=T[lang][idx>=0?'editCar':'newCar'];
+  if(idx>=0){
+    var c=cars[idx];
+    g('f-name').value=c.name;g('f-gross').value=c.gross||'';g('f-cap').value=c.cap;g('f-cons').value=c.cons;
+    formCalcBuf();
+  } else {
+    g('f-name').value='';g('f-gross').value='';g('f-cap').value='';g('f-cons').value='';
+    g('form-buf').textContent='—';
+  }
+  g('saved-badge').className='saved-badge';
+  g('add-form').style.display='block';g('f-name').focus();
+}
+
+function hideForm(){g('add-form').style.display='none';editIdx=-1;}
+
+function saveCar(){
+  var name=g('f-name').value.trim(),gross=parseFloat(g('f-gross').value)||0,cap=parseFloat(g('f-cap').value),cons=parseFloat(g('f-cons').value);
+  if(!name||!cap||!cons)return;
+  var obj={name:name,gross:gross,cap:cap,cons:cons};
+  if(editIdx>=0){cars[editIdx]=obj;if(activeCar===editIdx)loadCar(editIdx);}
+  else{cars.push(obj);}
+  saveToDB();
+  var badge=g('saved-badge');badge.textContent=T[lang].saved;badge.className='saved-badge show';
+  setTimeout(function(){badge.className='saved-badge';setTimeout(hideForm,300);},800);
+  renderCars();updateCmp();
+}
+
+function renderCars(){
+  var t=T[lang],list=g('car-list');list.innerHTML='';
+  if(!cars.length){list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M5 17H3v-5l2-6h14l2 6v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg><p>'+t.noCars+'</p></div>';return;}
+  cars.forEach(function(c,i){
+    var r=Math.round(((80/100)*c.cap)/c.cons*100),d=document.createElement('div');
+    d.className='carcard'+(i===activeCar?' sel':'');
+    d.innerHTML=
+      '<div class="carcard-top" onclick="loadCar('+i+');renderCars();goTo(\'range\');">'+
+        '<div class="caricon"><svg viewBox="0 0 24 24"><path d="M5 17H3v-5l2-6h14l2 6v5h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 17h12"/></svg></div>'+
+        '<div style="min-width:0;flex:1;"><div class="carname">'+c.name+'</div>'+
+        '<div class="carspec">'+(c.gross?c.gross+' kWh brutto · ':'')+c.cap+'&nbsp;kWh · '+c.cons.toFixed(1).replace('.',',')+'&nbsp;kWh/100km</div></div>'+
+        '<div class="carrange">'+r+'<span>'+t.atLevel+'</span></div>'+
+      '</div>'+
+      '<div class="carcard-actions">'+
+        '<button class="car-btn load" onclick="loadCar('+i+');goTo(\'range\');"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>'+t.loadBtn+'</button>'+
+        '<button class="car-btn" onclick="showForm('+i+');"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'+t.editBtn+'</button>'+
+        '<button class="car-btn del" onclick="if(confirm(\''+t.delConfirm+'\'))deleteCar('+i+');"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'+t.delBtn+'</button>'+
+      '</div>';
+    list.appendChild(d);
+  });
+}
+
+function genSyncCode(){
+  try{return btoa(unescape(encodeURIComponent(JSON.stringify(cars))));}catch(e){return '';}
+}
+
+function copySyncCode(){
+  var code=genSyncCode();
+  g('sync-out').value=code;
+  navigator.clipboard.writeText(code).then(function(){
+    showSyncBadge('✓ Kopiert!');
+  }).catch(function(){
+    g('sync-out').select();
+    showSyncBadge('✓ Marker og kopier manuelt');
+  });
+}
+
+function importSyncCode(){
+  var raw=g('sync-in').value.trim();
+  if(!raw){showSyncBadge('Lim inn en kode først');return;}
+  try{
+    var imported=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(!Array.isArray(imported)||!imported.length){showSyncBadge('Ugyldig kode');return;}
+    cars=imported;activeCar=0;saveToDB();renderCars();updateCmp();
+    g('sync-in').value='';
+    showSyncBadge('✓ '+imported.length+' biler importert!');
+  }catch(e){showSyncBadge('Ugyldig kode — prøv igjen');}
+}
+
+function showSyncBadge(msg){
+  var b=g('sync-badge');b.textContent=msg;b.className='saved-badge show';
+  setTimeout(function(){b.className='saved-badge';},2500);
+}
+
+function cSyncS(){g('cnb').value=fv('csl');updateCmp();}
+function cSyncN(){g('csl').value=fv('cnb');updateCmp();}
+function cClamp(){var v=Math.min(Math.max(fv('cnb'),10),100);g('cnb').value=v;g('csl').value=v;updateCmp();}
+
+function updateCmp(){
+  var soc=fv('csl'),t=T[lang],list=g('cmp-list');list.innerHTML='';
+  if(!cars.length){list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg><p>'+t.noCmp+'</p></div>';return;}
+  var ranges=cars.map(function(c){return Math.round(((soc/100)*c.cap)/c.cons*100);}),maxR=Math.max.apply(null,ranges);
+  cars.forEach(function(c,i){
+    var r=ranges[i],color=COLORS[i%COLORS.length],pct=maxR>0?Math.round((r/maxR)*100):0,d=document.createElement('div');
+    d.className='cmp-card';
+    d.innerHTML='<div class="cmp-head"><div class="cmp-dot" style="background:'+color+'"></div><div class="cmp-name">'+c.name+'</div></div>'+
+      '<div class="cmp-num" style="color:'+color+'">'+r+' km</div>'+
+      '<div class="cmp-detail">'+c.cap+'&nbsp;kWh · '+c.cons.toFixed(1).replace('.',',')+'&nbsp;kWh/100km</div>';
+    list.appendChild(d);
+  });
+}
+
+loadFromDB();
+try{var st=localStorage.getItem('ev_theme');if(st&&st!=='auto'){theme=st;document.documentElement.setAttribute('data-theme',st);g('theme-btn').textContent=st==='dark'?'☀️':'🌙';}}catch(e){}
+if(lang==='en'){g('btn-no').className='lang-btn';g('btn-en').className='lang-btn active';}
+if(cars.length>0)loadCar(activeCar);
+setLang(lang);
+renderCars();updateRange();updateCmp();
+
+// Generer app-ikon via canvas og sett som apple-touch-icon
+(function(){
+  var c=document.createElement('canvas');c.width=180;c.height=180;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='#1D9E75';
+  ctx.beginPath();ctx.roundRect(0,0,180,180,36);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 56px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('EV',90,80);
+  ctx.font='bold 22px -apple-system,sans-serif';
+  ctx.fillText('RANGE',90,118);
+  var link=document.getElementById('ati');
+  link.href=c.toDataURL('image/png');
+})();
+
+// Registrer service worker for offline-støtte
+if('serviceWorker' in navigator){
+  var APP_VER='v14';
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    if(localStorage.getItem('app_ver')!==APP_VER){
+      localStorage.setItem('app_ver',APP_VER);
+      Promise.all(regs.map(function(r){return r.unregister();})).then(function(){
+        window.location.reload();
+      });
+    } else {
+      navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(function(){});
+    }
+  });
+}
+</script>
+</body>
+</html>
