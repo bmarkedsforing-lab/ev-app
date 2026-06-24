@@ -466,12 +466,13 @@ function showSyncBadge(msg){
   setTimeout(function(){b.className='saved-badge';},2500);
 }
 
-function cSyncS(){g('cnb').value=fv('csl');updateCmp();try{localStorage.setItem('ev_cmp_soc',fv('csl'));}catch(e){}}
-function cSyncN(){g('csl').value=fv('cnb');updateCmp();try{localStorage.setItem('ev_cmp_soc',fv('cnb'));}catch(e){}}
-function cClamp(){var v=Math.min(Math.max(fv('cnb'),10),100);g('cnb').value=v;g('csl').value=v;updateCmp();try{localStorage.setItem('ev_cmp_soc',v);}catch(e){}}
+function cSyncS(){g('cnb').value=fv('csl');updateCmp();}
+function cSyncN(){g('csl').value=fv('cnb');updateCmp();}
+function cClamp(){var v=Math.min(Math.max(fv('cnb'),10),100);g('cnb').value=v;g('csl').value=v;updateCmp();}
 
 function updateCmp(){
   var soc=fv('csl'),t=T[lang],list=g('cmp-list');list.innerHTML='';
+  if(!_init)try{localStorage.setItem('ev_cmp_soc',soc);}catch(e){}
   if(!cars.length){list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg><p>'+t.noCmp+'</p></div>';return;}
   var ranges=cars.map(function(c){return Math.round(((soc/100)*c.cap)/c.cons*100);}),maxR=Math.max.apply(null,ranges);
   cars.forEach(function(c,i){
@@ -516,7 +517,7 @@ renderCars();updateRange();updateCmp();
 
 // Registrer service worker for offline-støtte
 if('serviceWorker' in navigator){
-  var APP_VER='v18';
+  var APP_VER='v19';
   navigator.serviceWorker.getRegistrations().then(function(regs){
     if(localStorage.getItem('app_ver')!==APP_VER){
       localStorage.setItem('app_ver',APP_VER);
