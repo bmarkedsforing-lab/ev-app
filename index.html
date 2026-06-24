@@ -250,6 +250,7 @@ tr.hi{background:var(--green-bg);}
 
 <script>
 var COLORS=['#1D9E75','#378ADD','#D85A30','#D4537E','#7F77DD','#BA7517'];
+var _init=true;
 
 var DEFAULT_CARS=[
   {name:'Audi e-tron 55',gross:95,cap:86,cons:24.5}
@@ -335,7 +336,7 @@ function cl(f,mn,mx){
 
 function updateRange(){
   var soc=fv('sl-soc'),cap=fv('sl-cap'),cons=fv('sl-cons'),t=T[lang];
-  try{localStorage.setItem('ev_soc',soc);localStorage.setItem('ev_cap',cap);localStorage.setItem('ev_cons',cons);}catch(e){}
+  if(!_init)try{localStorage.setItem('ev_soc',soc);localStorage.setItem('ev_cap',cap);localStorage.setItem('ev_cons',cons);}catch(e){}
   if(!cons)return;
   var energy=(soc/100)*cap,range=Math.round((energy/cons)*100),maxR=Math.round((cap/cons)*100);
   g('r-km').textContent=range;g('r-kwh').textContent=energy.toFixed(1).replace('.',',');
@@ -495,6 +496,7 @@ try{
   var _csoc=localStorage.getItem('ev_cmp_soc');
   if(_csoc){g('csl').value=_csoc;g('cnb').value=_csoc;}
 }catch(e){}
+_init=false;
 setLang(lang);
 renderCars();updateRange();updateCmp();
 
@@ -514,7 +516,7 @@ renderCars();updateRange();updateCmp();
 
 // Registrer service worker for offline-støtte
 if('serviceWorker' in navigator){
-  var APP_VER='v17';
+  var APP_VER='v18';
   navigator.serviceWorker.getRegistrations().then(function(regs){
     if(localStorage.getItem('app_ver')!==APP_VER){
       localStorage.setItem('app_ver',APP_VER);
